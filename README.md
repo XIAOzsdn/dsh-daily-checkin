@@ -104,7 +104,7 @@ dsh plugin --profile desktop remove @ebony-vinyl/dsh-our-free-model
 它就会按步骤完成安装与验证。提示词里已包含**本仓库链接**。
 
 ```text
-请帮我在本机安装 DSH 插件 dsh-daily-checkin（只保留每日自动签到 + 签到渠道的免费模型）。
+请帮我在本机安装 DSH 插件 dsh-daily-checkin。
 
 要安装的仓库（就是下面这个链接）：
 https://github.com/XIAOzsdn/dsh-daily-checkin
