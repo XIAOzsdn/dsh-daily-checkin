@@ -32,6 +32,7 @@
 | 每日自动签到 | DSH 启动 30 秒后执行，按 UTC+8 每天只跑一次；当天失败会自动重试 |
 | 手动签到 | 设置页「立即签到」，逐渠道串行领取，不受每天一次限制 |
 | 账号登录 / 账号池 | 每个渠道可登录多个账号，自动轮换 |
+| 剩余积分显示 | 每个账号的剩余积分/额度（含资源包明细），签到后与每 90 秒自动刷新 |
 | 签到渠道的免费模型 | 由各渠道**原生适配器**提供，请求消耗该渠道账号额度 |
 | 模型开关 | 可单独关闭某个渠道下的某个模型 |
 | 本机 OpenAI 网关 | 渠道引擎自带，供本机其它工具调用（默认 `127.0.0.1:8326`，可不开） |
@@ -149,7 +150,7 @@ dsh plugin --profile desktop add "<插件绝对路径>"
 ### 方式三：ZIP / 离线复制安装
 
 ```powershell
-# 解压 dsh-daily-checkin-1.0.0.zip 后，对解压目录执行同样的 add
+# 解压 dsh-daily-checkin-1.0.1.zip 后，对解压目录执行同样的 add
 dsh plugin --profile desktop add "C:\path\to\dsh-daily-checkin"
 ```
 
@@ -169,7 +170,8 @@ dsh plugin --profile desktop add "C:\path\to\dsh-daily-checkin"
 1. 打开 **设置 → 每日签到**。
 2. 每个渠道点「登录」，按弹出的登录页完成授权；登录成功后账号自动出现。
 3. 「每日自动签到」默认开启。也可以点「立即签到」立刻领一次。
-4. 回到模型选择器，选择对应渠道的模型即可。模型列表来自该渠道，
+4. 展开「账号与模型」可以看到每个账号的剩余积分；点「刷新余额」立即重查。
+5. 回到模型选择器，选择对应渠道的模型即可。模型列表来自该渠道，
    首次使用前需要在设置页点一次「账号与模型 → 刷新模型列表」。
 
 ### 模型为什么一定走签到渠道
@@ -191,6 +193,28 @@ dsh plugin --profile desktop add "C:\path\to\dsh-daily-checkin"
 - 配置接口 `/api/daily-checkin/config` 与 `/api/daily-checkin/health` 只允许同源访问。
 - 所有接口返回统一信封：`{ ok, data, error, meta }`，`meta` 内含
   插件名、版本、生成时间与置信度，便于排障与下游识别。
+
+### 彻底清除账号与凭据（AI 提示词）
+
+账号是插件的数据残留、不是插件内置的。要彻底清空，把下面提示词交给能执行命令的 AI：
+
+```text
+请帮我彻底清除 DSH 渠道插件 dsh-daily-checkin（以及原版 @ebony-vinyl/dsh-our-free-model）
+在本机留下的账号与凭据。不需要备份，直接删除。
+
+按顺序执行，任何一步失败就停下说明原因：
+1. 先关闭 DSH，确认没有 dsh 进程在运行。
+2. 读取 DSH 数据目录（默认 %USERPROFILE%\.dsh；若设置了 DSH_HOME 则用 DSH_HOME）
+   下的 channel-pack\state.json，收集 accounts 里每个账号的 provider 与 credentialRef。
+   只记录名称，不要打印任何凭据内容。
+3. 打开 DSH_HOME\.credentials.yaml，在 refs: 下删除键名与上一步 credentialRef
+   完全相同的条目；不要动 DEEPSEEK_API_KEY 等其它凭据，也不要打印文件内容。
+4. 删除整个 DSH_HOME\channel-pack 目录（账号池、签到记录、模型黑名单、账本）。
+5. 可选：若不再使用本机网关，删除 DSH_HOME\openai-gateway\api-key。
+6. 重启 DSH，打开「设置 → 每日签到」，确认账号列表为空、签到记录已清空。
+7. 报告：删除了哪些账号（provider + nickname）、删除了哪些 credentialRef 名称、
+   是否重启成功。不要输出任何凭据值。
+```
 
 ## 6. 自检与验证
 
