@@ -103,7 +103,9 @@ dsh plugin --profile desktop remove @ebony-vinyl/dsh-our-free-model
 把下面这段提示词，粘贴到**你要安装插件的那个 DSH 的 AI 助手**里即可。
 
 ```text
-请在本机当前运行的 DSH 中安装插件 dsh-daily-checkin，仓库：
+请帮我在本机安装 DSH 插件 dsh-daily-checkin（只保留每日自动签到 + 签到渠道的免费模型）。
+
+要安装的仓库（就是下面这个链接）：
 https://github.com/XIAOzsdn/dsh-daily-checkin
 
 按顺序执行，任何一步失败就停下并说明原因，不要跳步：
