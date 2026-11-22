@@ -98,7 +98,55 @@ dsh plugin --profile desktop remove @ebony-vinyl/dsh-our-free-model
 账号与签到记录保存在 `DSH_HOME/channel-pack/`，卸载插件不会删除：
 装上新插件后，原先登录过的账号仍然有效，不需要重新登录。
 
-### 方式 A：源码目录安装（推荐）
+### 方式一：AI 安装（推荐）
+
+把下面整段提示词复制给任意 AI 助手（Trae / DSH 内置助手 / 其它能执行命令的 AI），
+它就会按步骤完成安装与验证。提示词里已包含**本仓库链接**。
+
+```text
+请帮我在本机安装 DSH 插件 dsh-daily-checkin（只保留每日自动签到 + 签到渠道的免费模型）。
+
+要安装的仓库（就是下面这个链接）：
+https://github.com/XIAOzsdn/dsh-daily-checkin
+
+必须知悉的背景：
+- 本仓库是 @ebony-vinyl/dsh-our-free-model 的非官方精简衍生版。
+- 原版仓库：https://github.com/Ebony-Vinyl/dsh-our-free-model
+- 原版作者：Ebony-Vinyl（https://github.com/Ebony-Vinyl）
+- 本仓库与原版不能同时安装：两者都会挂载同一个渠道引擎与同名模型 provider。
+
+请严格按顺序执行，任何一步失败都要先解释原因并给出修复方案，禁止跳步：
+1. 检查环境：node -v 必须 >= 22.19.0；dsh --version 必须 >= 0.2.0-rc.2。
+   不满足就停止，并告诉我如何升级。
+2. 如果 pnpm 不存在，执行：npm install -g pnpm
+3. 获取源码（优先 git clone；本机没有 git 就下载 ZIP 后解压）：
+   git clone https://github.com/XIAOzsdn/dsh-daily-checkin.git
+4. 先问清楚我要装到哪个 profile（desktop 桌面端 或 web 纯 Web，默认 desktop）。
+   如果该 profile 已安装原版插件，先卸载：
+   dsh plugin --profile <profile> remove @ebony-vinyl/dsh-our-free-model
+5. 进入插件目录，依次执行，必须全部通过后再继续：
+   npm run validate
+   npm test
+   npm run doctor
+   不要跳过，也不要因为失败就继续安装。
+6. 安装到 profile：
+   dsh plugin --profile <profile> add "<插件目录的绝对路径>"
+7. 重启 DSH（关闭后重新启动）。
+8. 告诉我如何打开「设置 → 每日签到」，并提醒我：
+   - 逐个渠道点「登录」完成授权；
+   - 确认「每日自动签到」开关为开启；
+   - 模型列表为空时点「账号与模型 → 刷新模型列表」。
+9. 不要修改我的其它插件配置，不要删除 DSH_HOME/channel-pack 下已有账号与签到数据。
+10. 最后输出结果清单：Node 版本、DSH 版本、profile、三项校验结果、
+    安装路径、是否已重启、设置页入口。
+```
+
+AI 安装完成后，你只需要手动做两件事：
+
+1. 在「设置 → 每日签到」里逐个渠道点「登录」，完成授权。
+2. 确认「每日自动签到」处于开启状态。
+
+### 方式二：源码目录安装
 
 ```powershell
 # 1. 解压/克隆到任意目录（不需要 npm install，本包零运行时依赖）
@@ -114,16 +162,14 @@ dsh plugin --profile desktop add "<插件绝对路径>"
 # 4. 重启 DSH
 ```
 
-### 方式 B：从 ZIP 安装
+### 方式三：ZIP / 离线复制安装
 
 ```powershell
 # 解压 dsh-daily-checkin-1.0.0.zip 后，对解压目录执行同样的 add
 dsh plugin --profile desktop add "C:\path\to\dsh-daily-checkin"
 ```
 
-### 老电脑上的离线安装
-
-本包不依赖 npm 安装步骤，也可以直接复制目录：
+本机没有 pnpm / 不能执行 `dsh plugin add` 时，也可以直接复制目录：
 
 1. 把整个插件目录复制到
    `<DSH_HOME>/profiles/<profile>/node_modules/dsh-daily-checkin/`
