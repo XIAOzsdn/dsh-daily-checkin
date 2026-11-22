@@ -55,6 +55,7 @@ window.__ModuleLoader__.load({
       '.dsc-model:last-child{border-bottom:0}',
       '.dsc-model .dsc-grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.dsc-empty{padding:14px 0;color:var(--dsw-alias-text-secondary,#8a919c);font-size:12.5px}',
+      '.dsc-credit{font-size:11.5px;color:#187a3d;background:rgba(31,158,79,.10);border:1px solid rgba(31,158,79,.25);border-radius:999px;padding:1px 8px;white-space:nowrap}',
       '.dsc-note{font-size:12px;color:var(--dsw-alias-text-secondary,#6b7280);background:rgba(124,108,240,.07);border:1px solid rgba(124,108,240,.2);border-radius:9px;padding:9px 11px;margin-top:10px}',
       '.dsc-warn{font-size:12px;color:#b45309;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:9px;padding:9px 11px;margin-top:10px}',
       '.dsc-err{font-size:12px;color:#b02020;background:rgba(204,34,34,.07);border:1px solid rgba(204,34,34,.25);border-radius:9px;padding:9px 11px;margin-top:10px}',
@@ -101,6 +102,29 @@ window.__ModuleLoader__.load({
       } catch {
         return '—';
       }
+    }
+
+    /** 额度/积分展示：保留两位小数，超过一百万用 M 简写。 */
+    function fmtCredits(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return '—';
+      const rounded = Math.round(n * 100) / 100;
+      if (Math.abs(rounded) >= 1_000_000) return (rounded / 1_000_000).toFixed(1).replace(/\.0$/u, '') + 'M';
+      try {
+        return rounded.toLocaleString('zh-CN', { maximumFractionDigits: 2 });
+      } catch {
+        return String(rounded);
+      }
+    }
+
+    /** 余额明细（悬停提示）：列出每个有效资源包及其剩余额度。 */
+    function balanceDetail(balance) {
+      const packages = balance && Array.isArray(balance.packages) ? balance.packages : [];
+      const active = packages.filter((item) => item && item.active !== false);
+      if (active.length === 0) return '';
+      return active
+        .map((item) => String(item.name || '额度') + '：' + fmtCredits(item.remaining) + (item.unit === 'token' ? ' token' : ''))
+        .join('\n');
     }
 
     function providerOf(cfg, id) {
@@ -191,6 +215,7 @@ window.__ModuleLoader__.load({
       const [boot, setBoot] = useState({ status: 'loading', cfg: null, error: '' });
       const [auto, setAuto] = useState(undefined);
       const [accounts, setAccounts] = useState({});
+      const [balances, setBalances] = useState({});
       const [models, setModels] = useState({});
       const [expanded, setExpanded] = useState('');
       const [busy, setBusy] = useState('');
@@ -220,6 +245,23 @@ window.__ModuleLoader__.load({
         }
       }, [available, rpc]);
 
+      /** 单渠道余额：逐账号剩余积分/额度（credits.balances）。 */
+      const loadBalances = useCallback(async (provider, force) => {
+        if (!available) return;
+        setBalances((previous) => ({ ...previous, [provider]: { status: 'loading', rows: [] } }));
+        try {
+          const value = await rpc(
+            'credits.balances',
+            { provider, ...(force === true ? { force: true } : {}) },
+            90_000,
+          );
+          const rows = value && Array.isArray(value.accounts) ? value.accounts : [];
+          setBalances((previous) => ({ ...previous, [provider]: { status: 'ready', rows } }));
+        } catch (error) {
+          setBalances((previous) => ({ ...previous, [provider]: { status: 'error', rows: [], error: textOf(error) } }));
+        }
+      }, [available, rpc]);
+
       const loadAccounts = useCallback(async () => {
         if (!available) return;
         const list = cfg && Array.isArray(cfg.channels) ? cfg.channels : [];
@@ -233,7 +275,25 @@ window.__ModuleLoader__.load({
           }
         }));
         setAccounts(next);
-      }, [available, rpc, cfg]);
+        setBalances((previous) => {
+          let changed = false;
+          const clean = { ...previous };
+          for (const channel of list) {
+            const rows = next[channel.id];
+            if (!Array.isArray(rows) || rows.length === 0) {
+              if (Object.prototype.hasOwnProperty.call(clean, channel.id)) {
+                delete clean[channel.id];
+                changed = true;
+              }
+            }
+          }
+          return changed ? clean : previous;
+        });
+        for (const channel of list) {
+          const rows = next[channel.id];
+          if (Array.isArray(rows) && rows.length > 0) void loadBalances(channel.id);
+        }
+      }, [available, rpc, cfg, loadBalances]);
 
       useEffect(() => {
         let alive = true;
@@ -259,6 +319,18 @@ window.__ModuleLoader__.load({
         void loadAuto();
         void loadAccounts();
       }, [cfg, available, loadAuto, loadAccounts]);
+
+      // 余额会随别处调用模型而变化：页面停留时每 90 秒静默刷新一次。
+      useEffect(() => {
+        if (!cfg || !available) return undefined;
+        const timer = setInterval(() => {
+          for (const channel of channels) {
+            const rows = accounts[channel.id];
+            if (Array.isArray(rows) && rows.length > 0) void loadBalances(channel.id);
+          }
+        }, 90_000);
+        return () => clearInterval(timer);
+      }, [cfg, available, channels, accounts, loadBalances]);
 
       useEffect(() => () => {
         const login = loginRef.current;
@@ -306,6 +378,10 @@ window.__ModuleLoader__.load({
         }
         await loadAuto();
         await loadAccounts();
+        for (const channel of list) {
+          const bucket = accounts[channel.id];
+          if (Array.isArray(bucket) && bucket.length > 0) void loadBalances(channel.id, true);
+        }
         setBusy('');
         showToast(lines.join('；') || '没有可签到的渠道');
       }
@@ -317,7 +393,7 @@ window.__ModuleLoader__.load({
         login.accountId = '';
       }
 
-      async function pollLogin(accountId) {
+      async function pollLogin(accountId, provider) {
         stopLoginPoll();
         loginRef.current.accountId = accountId;
         loginRef.current.startedAt = Date.now();
@@ -334,6 +410,7 @@ window.__ModuleLoader__.load({
             if (value && value.done === true) {
               stopLoginPoll();
               await loadAccounts();
+              if (provider) void loadBalances(provider);
               showToast(value.success === true ? '登录成功' : '登录未完成：' + (value.error || '请重试'), value.success !== true);
             }
           } catch {
@@ -362,7 +439,7 @@ window.__ModuleLoader__.load({
           } else {
             showToast('已在渠道端发起登录，请按提示完成');
           }
-          if (accountId) void pollLogin(accountId);
+          if (accountId) void pollLogin(accountId, provider);
           await loadAccounts();
         } catch (error) {
           showToast('发起登录失败：' + textOf(error), true);
@@ -513,6 +590,11 @@ window.__ModuleLoader__.load({
             const isOpen = expanded === channel.id;
             const modelBucket = models[channel.id];
             const modelRows = Array.isArray(modelBucket) ? modelBucket : [];
+            const balanceBucket = balances[channel.id];
+            const balanceRows = balanceBucket && Array.isArray(balanceBucket.rows) ? balanceBucket.rows : [];
+            const knownBalances = balanceRows.filter((row) => row && row.balance && Number.isFinite(row.balance.total));
+            const totalBalance = knownBalances.reduce((sum, row) => sum + row.balance.total, 0);
+            const balanceLoading = balanceBucket && balanceBucket.status === 'loading';
             return h('div', { className: 'dsc-channel', key: channel.id },
               h('div', { className: 'dsc-channel-head' },
                 h('div', { className: 'dsc-badge', style: { background: 'linear-gradient(135deg,#6b5ae6,#8d7bf0)' } }, String(channel.name || channel.id).slice(0, 2)),
@@ -521,6 +603,9 @@ window.__ModuleLoader__.load({
                   h('div', { className: 'dsc-sub' }, channel.note || '')),
                 rows.length > 0 ? h(Badge, { tone: 'ok' }, rows.length + ' 个账号') : h(Badge, { tone: 'off' }, '未登录'),
                 channelText(channel.id) ? h(Badge, { tone: 'warn' }, channelText(channel.id)) : null,
+                knownBalances.length > 0
+                  ? h('span', { className: 'dsc-credit', title: '已查询 ' + knownBalances.length + ' 个账号' }, '剩余积分 ' + fmtCredits(totalBalance))
+                  : balanceLoading ? h('span', { className: 'dsc-sub' }, '余额查询中…') : null,
                 h('button', {
                   className: 'dsc-btn',
                   'data-v': 'primary',
@@ -550,7 +635,19 @@ window.__ModuleLoader__.load({
                       h('div', { className: 'dsc-main' },
                         h('div', null, h('b', null, account.nickname || account.id), ' ',
                           account.enabled === false ? h(Badge, { tone: 'off' }, '已停用') : h(Badge, { tone: 'ok' }, '启用中')),
-                        h('div', { className: 'dsc-mono' }, account.id + (account.expiresAt ? ' · 到期 ' + fmtTime(account.expiresAt) : ''))),
+                        h('div', { className: 'dsc-mono' }, account.id + (account.expiresAt ? ' · 到期 ' + fmtTime(account.expiresAt) : '')),
+                        (() => {
+                          if (!balanceBucket) return null;
+                          if (balanceLoading) return h('div', { className: 'dsc-sub' }, '余额查询中…');
+                          if (balanceBucket.status === 'error') return h('div', { className: 'dsc-sub' }, '余额不可用');
+                          const entry = balanceRows.find((row) => row && row.accountId === account.id);
+                          if (!entry) return null;
+                          if (entry.balance && Number.isFinite(entry.balance.total)) {
+                            return h('div', { style: { marginTop: '4px' } },
+                              h('span', { className: 'dsc-credit', title: balanceDetail(entry.balance) || '' }, '剩余积分 ' + fmtCredits(entry.balance.total)));
+                          }
+                          return h('div', { className: 'dsc-sub' }, '余额查询失败' + (entry.error ? '：' + entry.error : ''));
+                        })()),
                       h('button', {
                         className: 'dsc-btn',
                         'data-v': 'ghost',
@@ -573,7 +670,12 @@ window.__ModuleLoader__.load({
                       className: 'dsc-btn',
                       disabled: !available,
                       onClick: () => void loadAccounts(),
-                    }, '刷新账号')),
+                    }, '刷新账号'),
+                    h('button', {
+                      className: 'dsc-btn',
+                      disabled: !available || balanceLoading,
+                      onClick: () => void loadBalances(channel.id, true),
+                    }, balanceLoading ? '余额查询中…' : '刷新余额')),
                   modelBucket && !Array.isArray(modelBucket) ? h('div', { className: 'dsc-err' }, '读取模型失败：' + modelBucket.error) : null,
                   modelRows.length === 0
                     ? h('div', { className: 'dsc-empty' }, '暂无模型数据（登录后点「刷新模型列表」）')

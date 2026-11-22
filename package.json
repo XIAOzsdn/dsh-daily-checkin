@@ -1,6 +1,6 @@
 {
   "name": "dsh-daily-checkin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DSH 极简插件：只保留每日自动签到与签到渠道的免费模型。模型全部由渠道原生适配器提供，请求消耗该渠道已登录账号的额度；无匿名免费车道、无 EAC、无 Kilo、无聚合渠道、无降级路由。",
   "type": "module",
   "private": true,
