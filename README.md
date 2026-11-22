@@ -1,5 +1,21 @@
 # dsh-daily-checkin
 
+> ## 来源与关系（先读这一段）
+>
+> - **原版仓库**：[Ebony-Vinyl/dsh-our-free-model](https://github.com/Ebony-Vinyl/dsh-our-free-model)
+> - **原版作者**：**Ebony-Vinyl**（GitHub：<https://github.com/Ebony-Vinyl>）
+> - **渠道引擎上游**：**Jet（iJetLi）**（<https://gitee.com/iJetLi>）的 MIT 渠道实现，
+>   由原版仓库以 `vendor/channel-pack` 内嵌
+> - **本仓库**：[XIAOzsdn/dsh-daily-checkin](https://github.com/XIAOzsdn/dsh-daily-checkin)
+>   （维护者：**XIAOzsdn**）
+>
+> **关系说明**：本仓库是原版仓库的**非官方精简衍生版（非官方 fork / derivative）**，
+> 基于原版 `@ebony-vinyl/dsh-our-free-model@2.8.0` 的代码与内置渠道引擎做裁剪重写。
+> 本仓库**不是**原作者发布、**不是**原仓库的官方分支或续作，**不受**原作者维护、
+> 审核或背书，也**不会**自动同步原仓库的更新。原版是功能完整的模型聚合插件；
+> 本仓库只保留「每日自动签到 + 签到渠道的免费模型」。
+> 原版的问题与功能请求请提交到原仓库；本仓库只对裁剪后的这部分负责。
+
 **每日自动签到 + 签到渠道的免费模型** —— 一个只保留这两件事的 DSH 插件。
 
 它不是一个新写的「模型协议实现」，而是把渠道引擎（账号登录、账号池、每日签到、渠道模型、本机网关）单独留下，把原项目其余功能全部移除后的极简包。
@@ -167,11 +183,32 @@ npm run doctor     # 环境体检：Node、DSH_HOME、profile、渠道引擎文�
 | 签到失败 | 渠道凭据过期时先点账号「刷新/重新登录」；Qoder 活动 10:00（UTC+8）才刷新 |
 | 与官方插件冲突 | 两个插件不能共存，卸载 `@ebony-vinyl/dsh-our-free-model` 后重启 |
 
-## 8. 来源与许可
+## 8. 来源、作者与关系
 
-- 本插件 MIT。
-- 内置渠道引擎来自 [Ebony-Vinyl/dsh-our-free-model](https://github.com/Ebony-Vinyl/dsh-our-free-model)
-  的 `vendor/channel-pack`（MIT），原样保留 `LICENSE` 与 `NOTICE.md`，未修改其协议实现。
+### 原版仓库与作者
+
+| 项目 | 内容 |
+|---|---|
+| 原版仓库 | [https://github.com/Ebony-Vinyl/dsh-our-free-model](https://github.com/Ebony-Vinyl/dsh-our-free-model) |
+| 原版作者 | **Ebony-Vinyl**（<https://github.com/Ebony-Vinyl>） |
+| 渠道引擎上游 | **Jet（iJetLi）**（<https://gitee.com/iJetLi>），MIT |
+| 本仓库 | [https://github.com/XIAOzsdn/dsh-daily-checkin](https://github.com/XIAOzsdn/dsh-daily-checkin) |
+| 本仓库维护者 | **XIAOzsdn** |
+| 本仓库基线 | 原版 `@ebony-vinyl/dsh-our-free-model@2.8.0` |
+
+### 两者是什么关系
+
+- 本仓库是原版仓库的**非官方精简衍生版（非官方 fork / derivative）**：保留原版的渠道引擎与签到能力，删除其余功能。
+- 本仓库**不是**原作者发布，**不是**官方分支、官方续作或官方认可版本；原作者未参与本仓库的维护、审核或背书。
+- 本仓库**不会**自动同步原仓库的更新，也不保证与原版的行为、版本、接口保持一致。
+- 原版是功能完整的模型聚合插件；本仓库只保留「每日自动签到 + 签到渠道的免费模型」，两者定位不同。
+- 原版的问题、功能请求与安全反馈请提交到原仓库；本仓库只对裁剪后的这部分代码负责。
+- 渠道引擎的原始版权与许可归 Jet（iJetLi）与原版仓库所有，详见 `vendor/channel-pack/NOTICE.md` 与 `LICENSE`。
+
+### 许可
+
+- 本仓库代码：MIT。
+- 内置渠道引擎来自原版仓库的 `vendor/channel-pack`（MIT），原样保留其 `LICENSE` 与 `NOTICE.md`。
   仅为通过 GitHub 推送保护，把其中两处**公开的 Gemini CLI 客户端标识**拆成了字符串拼接，
   运行时拼出的值与上游完全一致。
-- 上游渠道属于各自厂商，使用前请遵守对应服务条款；签到与模型调用均由你本机的账号完成。
+- 使用本仓库即表示你已知悉：这是第三方非官方衍生版，原版作者不对其负责。
