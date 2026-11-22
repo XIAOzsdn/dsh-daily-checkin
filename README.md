@@ -100,45 +100,27 @@ dsh plugin --profile desktop remove @ebony-vinyl/dsh-our-free-model
 
 ### 方式一：AI 安装（推荐）
 
-把下面整段提示词复制给任意 AI 助手（Trae / DSH 内置助手 / 其它能执行命令的 AI），
-它就会按步骤完成安装与验证。提示词里已包含**本仓库链接**。
+把下面这段提示词，粘贴到**你要安装插件的那个 DSH 的 AI 助手**里即可。
 
 ```text
-请帮我在本机安装 DSH 插件 dsh-daily-checkin。
-
-要安装的仓库（就是下面这个链接）：
+请在本机当前运行的 DSH 中安装插件 dsh-daily-checkin，仓库：
 https://github.com/XIAOzsdn/dsh-daily-checkin
 
-必须知悉的背景：
-- 本仓库是 @ebony-vinyl/dsh-our-free-model 的非官方精简衍生版。
-- 原版仓库：https://github.com/Ebony-Vinyl/dsh-our-free-model
-- 原版作者：Ebony-Vinyl（https://github.com/Ebony-Vinyl）
-- 本仓库与原版不能同时安装：两者都会挂载同一个渠道引擎与同名模型 provider。
-
-请严格按顺序执行，任何一步失败都要先解释原因并给出修复方案，禁止跳步：
-1. 检查环境：node -v 必须 >= 22.19.0；dsh --version 必须 >= 0.2.0-rc.2。
-   不满足就停止，并告诉我如何升级。
-2. 如果 pnpm 不存在，执行：npm install -g pnpm
-3. 获取源码（优先 git clone；本机没有 git 就下载 ZIP 后解压）：
+按顺序执行，任何一步失败就停下并说明原因，不要跳步：
+1. 检查 node -v >= 22.19.0、dsh --version >= 0.2.0-rc.2；不满足就停止并告诉我如何升级。
+2. 缺 pnpm 就执行：npm install -g pnpm
+3. 没有 git 就下载 ZIP 解压，否则执行：
    git clone https://github.com/XIAOzsdn/dsh-daily-checkin.git
-4. 先问清楚我要装到哪个 profile（desktop 桌面端 或 web 纯 Web，默认 desktop）。
-   如果该 profile 已安装原版插件，先卸载：
-   dsh plugin --profile <profile> remove @ebony-vinyl/dsh-our-free-model
-5. 进入插件目录，依次执行，必须全部通过后再继续：
+4. 进入插件目录，依次执行，必须全部通过：
    npm run validate
    npm test
    npm run doctor
-   不要跳过，也不要因为失败就继续安装。
-6. 安装到 profile：
-   dsh plugin --profile <profile> add "<插件目录的绝对路径>"
-7. 重启 DSH（关闭后重新启动）。
-8. 告诉我如何打开「设置 → 每日签到」，并提醒我：
-   - 逐个渠道点「登录」完成授权；
-   - 确认「每日自动签到」开关为开启；
-   - 模型列表为空时点「账号与模型 → 刷新模型列表」。
-9. 不要修改我的其它插件配置，不要删除 DSH_HOME/channel-pack 下已有账号与签到数据。
-10. 最后输出结果清单：Node 版本、DSH 版本、profile、三项校验结果、
-    安装路径、是否已重启、设置页入口。
+5. 装到当前 DSH 正在使用的 profile：
+   dsh plugin --profile <当前 profile> add "<插件目录绝对路径>"
+6. 重启 DSH。
+7. 告诉我「设置 → 每日签到」在哪里，并提醒我登录渠道、确认自动签到已开启。
+8. 不要修改其它插件配置，不要删除 DSH_HOME/channel-pack 里已有的账号和签到数据。
+9. 最后给出结果清单：Node/DSH 版本、profile、三项校验结果、安装路径、是否已重启。
 ```
 
 AI 安装完成后，你只需要手动做两件事：
