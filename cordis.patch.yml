@@ -1,0 +1,6 @@
+# dsh-daily-checkin：每日签到 + 签到渠道免费模型
+# 安装后出现「设置 → 每日签到」页。
+- insert:
+    - id: daily-checkin
+      name: dsh-daily-checkin
+      config: {}

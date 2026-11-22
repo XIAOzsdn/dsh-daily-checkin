@@ -1,0 +1,75 @@
+{
+  "name": "dsh-daily-checkin",
+  "version": "1.0.0",
+  "description": "DSH 极简插件：只保留每日自动签到与签到渠道的免费模型。模型全部由渠道原生适配器提供，请求消耗该渠道已登录账号的额度；无匿名免费车道、无 EAC、无 Kilo、无聚合渠道、无降级路由。",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "lib",
+    "vendor/channel-pack",
+    "cordis.patch.yml",
+    "icon.svg",
+    "scripts/validate.mjs",
+    "scripts/doctor.mjs",
+    "test",
+    "README.md",
+    "LICENSE"
+  ],
+  "os": [
+    "win32",
+    "linux",
+    "darwin"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    },
+    "engines": {
+      "dsh": ">=0.2.0-rc.2"
+    },
+    "manifestVersion": 1
+  },
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "test": "node --test test/*.test.js"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/dsh-credentials": "*",
+    "@deepseek-ai/dsh-llm": "*",
+    "@deepseek-ai/schemastery": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-credentials": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
+  },
+  "license": "MIT"
+}
